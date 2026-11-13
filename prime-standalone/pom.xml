@@ -23,7 +23,7 @@
     <properties>
         <plugin.name>RainsPrime</plugin.name>
         <!-- 0.1.0: /prime, the store's grant/revoke, map art. -->
-        <plugin.version>0.3.1</plugin.version>
+        <plugin.version>0.3.2</plugin.version>
     </properties>
 
     <dependencies>

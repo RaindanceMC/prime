@@ -4,7 +4,7 @@ prime:
     header: "<gradient:#ff3d9a:#ffd27a><bold>✦ Prime ✦</bold></gradient> <gray>— support the server, get a little shine"
     active: "<green>You have Prime</green> <gray>until <white><until></white> · since <white><since></white> · <white><months></white> month(s) of drops unlocked. Thank you!"
     perk-names: "<dark_gray> • <white>Coloured names</white> <gray>— gradients, decorations, presets in /cosmetics"
-    perk-skins: "<dark_gray> • <white>Every weapon and armour skin</white> <gray>— plus particles and teleport looks"
+    perk-skins: "<dark_gray> • <white>The weapon and armour skins</white> <gray>— all but a few creator-only ones, plus particles and teleport looks"
     perk-drops: "<dark_gray> • <white>A Prime-only drop every month</white> <gray>— yours for each month you are Prime"
     perk-badge: "<dark_gray> • <white>The</white> <badge> <white>badge</white> <gray>in nine colours — /rank style"
     perk-guild: "<dark_gray> • <white>Guild colours from day one</white> <gray>— paint your guild's tag and name"

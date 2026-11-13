@@ -2,7 +2,7 @@ id: prime
 title: Prime
 summary: The supporter subscription — what it gives, and map art for members.
 intro: |
-  Prime is how you support the server every month. In return you get coloured names, every weapon and armour skin, a Prime-only cosmetic drop each month, the [PRIME] badge in nine colours, your guild's colours from day one, a statue at spawn, map art of any image, and your ideas looked at first.
+  Prime is how you support the server every month. In return you get coloured names, the weapon and armour skins (all but a few creator-only ones), a Prime-only cosmetic drop each month, the [PRIME] badge in nine colours, your guild's colours from day one, a statue at spawn, map art of any image, and your ideas looked at first.
 icon: NETHER_STAR
 category: Your profile
 order: 15
@@ -14,7 +14,7 @@ sections:
   - question: What does Prime give me?
     title: The perks
     text: |
-      Type <white>/prime</white> for the whole list and when yours runs until. In short: colours and styles for your name, particles, teleport looks and every skin in <white>/cosmetics</white>; each month's Prime drop, yours for good for every month you were Prime; the <white>[PRIME]</white> badge (pick its colours with <white>/rank style</white>); your guild may paint its tag and name at any level; a statue at spawn; map art; and your feature requests come first.
+      Type <white>/prime</white> for the whole list and when yours runs until. In short: colours and styles for your name, particles, teleport looks and the skins in <white>/cosmetics</white> (a few stay creator-only); each month's Prime drop, yours for good for every month you were Prime; the <white>[PRIME]</white> badge (pick its colours with <white>/rank style</white>); your guild may paint its tag and name at any level; a statue at spawn; map art; and your feature requests come first.
   - question: Where do I get Prime?
     title: Getting Prime
     text: |
