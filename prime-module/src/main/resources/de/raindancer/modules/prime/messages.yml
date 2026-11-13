@@ -35,6 +35,8 @@ prime:
     fetching: "<gray>Fetching and drawing map art <white><id></white>…"
     failed: "<red>Map art <white><id></white> could not be drawn: <white><reason></white>. <gray>It still waits — refuse it, or ask the player for another link."
     approved-staff: "<green>Map art <white><id></white> is drawn. <gray><player> gets the maps now, or when they next join."
+    approved-elsewhere: "<green>Map art <white><id></white> by <white><player></white> is approved by <white><by></white>; it is being drawn."
+    refused-elsewhere: "<yellow>Map art <white><id></white> by <white><player></white> is refused by <white><by></white>."
     refused-staff: "<yellow>Map art <white><id></white> by <white><player></white> is refused; it does not count against their month."
     refused: "<yellow>Your map art <white><id></white> was refused: <white><reason></white>. <gray>It does not count — try another image."
     delivered: "<green>Your map art <white><id></white> is here: <white><count></white> map(s), <white><size></white>. <gray>Put them in item frames row by row, top left first."

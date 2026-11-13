@@ -8,6 +8,7 @@ import de.raindancer.modules.api.ModuleCommand;
 import de.raindancer.modules.api.ModuleContext;
 import de.raindancer.modules.api.ModuleInfo;
 import de.raindancer.modules.prime.listener.JoinListener;
+import de.raindancer.modules.prime.rules.MapArtReviews;
 import de.raindancer.modules.prime.service.MapArtService;
 import de.raindancer.modules.prime.store.MapArtBook;
 import de.raindancer.modules.prime.util.PermissionNodes;
@@ -21,7 +22,7 @@ import java.util.List;
  */
 public final class PrimeModule implements FlexModule {
 
-    private static final ModuleInfo INFO = ModuleInfo.of("prime", "Prime", "0.1.0")
+    private static final ModuleInfo INFO = ModuleInfo.of("prime", "Prime", "0.2.0")
             .describedAs("The Prime subscription: its overview, the store's commands, and map art for members")
             .by("Raindancer118");
 
@@ -42,7 +43,9 @@ public final class PrimeModule implements FlexModule {
         book.load();
         context.closeWith(book.watch());
         MapArtService mapArt = new MapArtService(context.plugin(), context.plugin().getServer(), book,
-                context.core().messages(), settings::current, context.dataFolder().resolve("mapart"));
+                context.core().messages(), settings::current, context.dataFolder().resolve("mapart"),
+                context.core().staffReviews());
+        context.closeWith(context.core().staffReviews().decider(MapArtReviews.KIND, mapArt::decide));
         // Maps lose their custom drawing on a restart; the tiles are kept, so draw them again once the worlds are up.
         Scheduling.globalLater(context.plugin(), 1, () -> {
             int restored = mapArt.restore();

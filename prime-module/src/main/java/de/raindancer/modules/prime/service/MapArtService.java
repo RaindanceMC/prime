@@ -1,10 +1,12 @@
 package de.raindancer.modules.prime.service;
 
+import de.raindancer.core.moderation.review.StaffReviews;
 import de.raindancer.core.platform.network.ThisServer;
 import de.raindancer.core.platform.util.Scheduling;
 import de.raindancer.core.ui.messages.Messages;
 import de.raindancer.modules.prime.PrimeSettings;
 import de.raindancer.modules.prime.model.MapArtRequest;
+import de.raindancer.modules.prime.rules.MapArtReviews;
 import de.raindancer.modules.prime.rules.MapArtRule;
 import de.raindancer.modules.prime.store.MapArtBook;
 import de.raindancer.modules.prime.util.PermissionNodes;
@@ -39,6 +41,8 @@ import java.util.function.Supplier;
 public final class MapArtService {
 
     private static final String ID_LETTERS = "abcdefghjkmnpqrstuvwxyz23456789";
+    /** Leaves room in Hush's 64 KiB request once base64 has grown it by a third. */
+    private static final int PREVIEW_BYTES = 36 * 1024;
 
     private final Plugin plugin;
     private final Server server;
@@ -46,18 +50,20 @@ public final class MapArtService {
     private final Messages messages;
     private final Supplier<PrimeSettings> settings;
     private final Path tiles;
+    private final StaffReviews reviews;
     private final MapArtRule rule = new MapArtRule();
     private final ImageFetcher fetcher = new ImageFetcher();
     private final SecureRandom random = new SecureRandom();
 
     public MapArtService(Plugin plugin, Server server, MapArtBook book, Messages messages,
-                         Supplier<PrimeSettings> settings, Path tiles) {
+                         Supplier<PrimeSettings> settings, Path tiles, StaffReviews reviews) {
         this.plugin = plugin;
         this.server = server;
         this.book = book;
         this.messages = messages;
         this.settings = settings;
         this.tiles = tiles;
+        this.reviews = reviews;
     }
 
     /** How many requests they have left this month. */
@@ -111,6 +117,51 @@ public final class MapArtService {
                 announce(staff, request);
             }
         }
+        Scheduling.async(plugin, () -> postWaiting(request));
+    }
+
+    /** Off the server's threads: the request with a small picture of it, for staff on Discord. */
+    private void postWaiting(MapArtRequest request) {
+        byte[] preview = new byte[0];
+        String problem = "";
+        try {
+            BufferedImage scaled = fetcher.scale(fetcher.fetch(request.url(),
+                    settings.get().mapartMostMegabytes() * 1024L * 1024L), request.width(), request.height());
+            preview = PreviewMaker.jpeg(scaled, PREVIEW_BYTES);
+        } catch (IOException | RuntimeException failed) {
+            problem = String.valueOf(failed.getMessage());
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+            return;
+        }
+        reviews.post(MapArtReviews.waiting(request, preview, problem));
+    }
+
+    /**
+     * A decision made outside the game (Core's {@link StaffReviews}, e.g. Discord). Any thread. The console gets the
+     * replies a staff member would; reviewers online are told who decided.
+     */
+    public StaffReviews.Outcome decide(String id, boolean approve, String by, String reason) {
+        Optional<MapArtRequest> found = book.get(id);
+        if (found.isEmpty()) {
+            return StaffReviews.Outcome.UNKNOWN;
+        }
+        if (found.get().status() != MapArtRequest.Status.WAITING) {
+            return StaffReviews.Outcome.ALREADY_DECIDED;
+        }
+        String who = (by == null || by.isBlank() ? "staff" : by.strip()) + " via Discord";
+        for (Player staff : server.getOnlinePlayers()) {
+            if (staff.hasPermission(PermissionNodes.MAPART_REVIEW)) {
+                messages.send(staff, approve ? "prime.mapart.approved-elsewhere" : "prime.mapart.refused-elsewhere",
+                        "id", found.get().id(), "player", found.get().name(), "by", who);
+            }
+        }
+        if (approve) {
+            approve(server.getConsoleSender(), who, found.get().id());
+            return StaffReviews.Outcome.APPROVED;
+        }
+        refuse(server.getConsoleSender(), who, found.get().id(), reason);
+        return StaffReviews.Outcome.REFUSED;
     }
 
     private void announce(CommandSender staff, MapArtRequest request) {
@@ -132,15 +183,20 @@ public final class MapArtService {
     }
 
     public void refuse(CommandSender staff, String id, String reason) {
+        refuse(staff, staff.getName(), id, reason);
+    }
+
+    private void refuse(CommandSender staff, String by, String id, String reason) {
         Optional<MapArtRequest> found = waiting(staff, id);
         if (found.isEmpty()) {
             return;
         }
         String why = reason == null || reason.isBlank() ? "-" : reason.strip();
-        if (!book.change(found.get().id(), request -> request.refused(staff.getName(), why))) {
+        if (!book.change(found.get().id(), request -> request.refused(by, why))) {
             messages.send(staff, "prime.mapart.not-saved");
             return;
         }
+        reviews.post(MapArtReviews.refused(found.get(), by, why));
         messages.send(staff, "prime.mapart.refused-staff", "id", found.get().id(), "player", found.get().name());
         Player asker = server.getPlayer(found.get().player());
         if (asker != null) {
@@ -150,12 +206,17 @@ public final class MapArtService {
 
     /** Fetches and draws it; the maps go to the player now if they are here, else when they next join here. */
     public void approve(CommandSender staff, String id) {
+        approve(staff, staff.getName(), id);
+    }
+
+    private void approve(CommandSender staff, String by, String id) {
         Optional<MapArtRequest> found = waiting(staff, id);
         if (found.isEmpty()) {
             return;
         }
         MapArtRequest request = found.get();
         messages.send(staff, "prime.mapart.fetching", "id", request.id());
+        reviews.post(MapArtReviews.approved(request, by));
         long mostBytes = settings.get().mapartMostMegabytes() * 1024L * 1024L;
         Scheduling.async(plugin, () -> {
             List<BufferedImage> parts = new ArrayList<>();
@@ -171,16 +232,17 @@ public final class MapArtService {
                 }
             } catch (IOException | RuntimeException failed) {
                 messages.send(staff, "prime.mapart.failed", "id", request.id(), "reason", String.valueOf(failed.getMessage()));
+                reviews.post(MapArtReviews.failed(request, by, String.valueOf(failed.getMessage())));
                 return;
             } catch (InterruptedException interrupted) {
                 Thread.currentThread().interrupt();
                 return;
             }
-            Scheduling.global(plugin, () -> draw(staff, request, parts));
+            Scheduling.global(plugin, () -> draw(staff, by, request, parts));
         });
     }
 
-    private void draw(CommandSender staff, MapArtRequest request, List<BufferedImage> parts) {
+    private void draw(CommandSender staff, String by, MapArtRequest request, List<BufferedImage> parts) {
         World world = server.getWorlds().getFirst();
         List<Integer> ids = new ArrayList<>();
         for (BufferedImage part : parts) {
@@ -188,10 +250,12 @@ public final class MapArtService {
             dress(map, part);
             ids.add(map.getId());
         }
-        if (!book.change(request.id(), current -> current.drawn(staff.getName(), ThisServer.id(), ids))) {
+        if (!book.change(request.id(), current -> current.drawn(by, ThisServer.id(), ids))) {
             messages.send(staff, "prime.mapart.not-saved");
+            reviews.post(MapArtReviews.failed(request, by, "the drawn maps could not be saved"));
             return;
         }
+        reviews.post(MapArtReviews.drawn(request, by));
         messages.send(staff, "prime.mapart.approved-staff", "id", request.id(), "player", request.name());
         Player asker = server.getPlayer(request.player());
         if (asker != null) {
