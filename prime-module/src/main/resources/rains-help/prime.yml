@@ -1,0 +1,35 @@
+id: prime
+title: Prime
+summary: The supporter subscription — what it gives, and map art for members.
+intro: |
+  Prime is how you support the server every month. In return you get coloured names, every weapon and armour skin, a Prime-only cosmetic drop each month, the [PRIME] badge in nine colours, your guild's colours from day one, a statue at spawn, map art of any image, and your ideas looked at first.
+icon: NETHER_STAR
+category: Your profile
+order: 15
+module: prime
+aliases: [prime, supporter, subscription, mapart, map-art]
+keywords: [prime, support, subscription, perks, badge, mapart, map art, image, statue, store, tebex]
+commands: [prime]
+sections:
+  - question: What does Prime give me?
+    title: The perks
+    text: |
+      Type <white>/prime</white> for the whole list and when yours runs until. In short: colours and styles for your name, particles, teleport looks and every skin in <white>/cosmetics</white>; each month's Prime drop, yours for good for every month you were Prime; the <white>[PRIME]</white> badge (pick its colours with <white>/rank style</white>); your guild may paint its tag and name at any level; a statue at spawn; map art; and your feature requests come first.
+  - question: Where do I get Prime?
+    title: Getting Prime
+    text: |
+      {if:prime:store-url != ''}In the store: {setting:prime:store-url}. {/if}It is a subscription: it runs as long as you pay, and the perks stop when it ends. What a month's drop gave you comes back whenever you have Prime again.
+  - question: How do I get an image as map art?
+    title: Map art
+    when: prime:mapart.enabled
+    text: |
+      <white>/prime mapart <link> <width>x<height></white> — the image's own https:// address, and how many maps wide and high it should be, at most {setting:prime:mapart.most-maps} maps. The team looks at every image first; once it is approved you get the maps, ready for item frames. {setting:prime:mapart.per-month} per month; a refused one does not count. Only send images you may use.
+  - question: How does the team handle map art?
+    title: Map art for staff
+    when: prime:mapart.enabled
+    text: |
+      New requests are announced with buttons to open the image, approve or refuse. <white>/prime mapart list</white> shows what waits, <white>approve <id></white> draws it on maps (images of at most {setting:prime:mapart.most-megabytes} MB, https only, never from a private address), <white>refuse <id> [reason]</white> tells the player why.
+  - question: How does the store give Prime?
+    title: For the owner
+    text: |
+      The store runs <white>/prime grant <uuid> <days></white> on every purchase and renewal and <white>/prime revoke <uuid></white> when the subscription ends; <white>/prime info <player></white> shows someone's. Prime puts players in the <white>prime</white> permission group, which gives the rank and the Discord role.

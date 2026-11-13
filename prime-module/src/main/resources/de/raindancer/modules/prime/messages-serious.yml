@@ -1,0 +1,4 @@
+# The serious wording for this module: only the lines that differ from messages.yml.
+prime:
+  overview:
+    header: "<gradient:#ff3d9a:#ffd27a><bold>Prime</bold></gradient> <gray>— the server's supporter subscription"
