@@ -3,6 +3,7 @@ package de.raindancer.modules.prime.command;
 import de.raindancer.core.social.support.PrimeMembers;
 import de.raindancer.modules.prime.PrimeServices;
 import de.raindancer.modules.prime.util.PermissionNodes;
+import de.raindancer.modules.prime.util.PrimeBadge;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bukkit.command.CommandSender;
@@ -61,8 +62,12 @@ public final class PrimeCommand implements BasicCommand {
             live.messages().send(sender, "prime.overview.active", "until", DAY.format(member.get().until()),
                     "since", DAY.format(member.get().since()), "months", member.get().months().size());
         }
-        for (String perk : List.of("prime.overview.perk-names", "prime.overview.perk-skins", "prime.overview.perk-drops",
-                "prime.overview.perk-badge", "prime.overview.perk-guild", "prime.overview.perk-statue",
+        for (String perk : List.of("prime.overview.perk-names", "prime.overview.perk-skins", "prime.overview.perk-drops")) {
+            live.messages().send(sender, perk);
+        }
+        live.messages().send(sender, "prime.overview.perk-badge", "badge",
+                PrimeBadge.of(tag -> live.core().badges().register(tag), live.core().badgesShown()));
+        for (String perk : List.of("prime.overview.perk-guild", "prime.overview.perk-statue",
                 "prime.overview.perk-mapart", "prime.overview.perk-ideas", "prime.overview.perk-role")) {
             live.messages().send(sender, perk);
         }

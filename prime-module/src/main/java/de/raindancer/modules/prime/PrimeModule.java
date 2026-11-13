@@ -22,7 +22,7 @@ import java.util.List;
  */
 public final class PrimeModule implements FlexModule {
 
-    private static final ModuleInfo INFO = ModuleInfo.of("prime", "Prime", "0.3.0")
+    private static final ModuleInfo INFO = ModuleInfo.of("prime", "Prime", "0.3.1")
             .describedAs("The Prime subscription: its overview, the store's commands, and map art for members")
             .by("Raindancer118");
 
