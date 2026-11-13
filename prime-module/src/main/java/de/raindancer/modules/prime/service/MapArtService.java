@@ -43,6 +43,8 @@ public final class MapArtService {
     private static final String ID_LETTERS = "abcdefghjkmnpqrstuvwxyz23456789";
     /** Leaves room in Hush's 64 KiB request once base64 has grown it by a third. */
     private static final int PREVIEW_BYTES = 36 * 1024;
+    /** The scaled picture as it was when asked for, beside the tiles. */
+    private static final String KEPT = "asked.png";
 
     private final Plugin plugin;
     private final Server server;
@@ -68,56 +70,83 @@ public final class MapArtService {
 
     /** How many requests they have left this month. */
     public int left(Player player) {
-        return Math.max(0, settings.get().mapartPerMonth()
-                - rule.usedThisMonth(book.all(), player.getUniqueId(), Instant.now()));
+        return left(player.getUniqueId());
     }
 
-    public void ask(Player player, String link, String sizeTyped) {
+    private int left(java.util.UUID player) {
+        return Math.max(0, settings.get().mapartPerMonth() - rule.usedThisMonth(book.all(), player, Instant.now()));
+    }
+
+    /** A request taken, or why not: the message key and its placeholders. */
+    private record Opened(MapArtRequest request, String refusal, Object... args) {
+    }
+
+    private Opened open(java.util.UUID player, String name, String link, String sizeTyped, boolean prime) {
         PrimeSettings now = settings.get();
         if (!now.mapartEnabled()) {
-            messages.send(player, "prime.mapart.switched-off");
-            return;
+            return new Opened(null, "prime.mapart.switched-off");
         }
-        if (!player.hasPermission(PermissionNodes.MAPART)) {
-            messages.send(player, "prime.mapart.not-prime");
-            return;
+        if (!prime) {
+            return new Opened(null, "prime.mapart.not-prime");
         }
         Optional<MapArtRule.Size> size = rule.size(sizeTyped);
         if (size.isEmpty()) {
-            messages.send(player, "prime.mapart.usage");
-            return;
+            return new Opened(null, "prime.mapart.usage");
         }
         if (!rule.fits(size.get(), now.mapartMostMaps())) {
-            messages.send(player, "prime.mapart.too-big", "most", now.mapartMostMaps());
-            return;
+            return new Opened(null, "prime.mapart.too-big", "most", now.mapartMostMaps());
         }
         Optional<String> wrong = rule.linkProblem(link);
         if (wrong.isPresent()) {
-            messages.send(player, "prime.mapart.bad-link", "reason", wrong.get());
-            return;
+            return new Opened(null, "prime.mapart.bad-link", "reason", wrong.get());
         }
         if (left(player) <= 0) {
-            messages.send(player, "prime.mapart.month-used", "allowed", now.mapartPerMonth());
-            return;
+            return new Opened(null, "prime.mapart.month-used", "allowed", now.mapartPerMonth());
         }
         if (!book.readable()) {
-            messages.send(player, "prime.mapart.not-saved");
-            return;
+            return new Opened(null, "prime.mapart.not-saved");
         }
-        MapArtRequest request = new MapArtRequest(newId(), player.getUniqueId(), player.getName(), link.strip(),
-                size.get().width(), size.get().height(), MapArtRequest.Status.WAITING, Instant.now(), "", "", "",
-                List.of());
+        MapArtRequest request = new MapArtRequest(newId(), player, name, link.strip(), size.get().width(),
+                size.get().height(), MapArtRequest.Status.WAITING, Instant.now(), "", "", "", List.of());
         if (!book.put(request)) {
-            messages.send(player, "prime.mapart.not-saved");
-            return;
+            return new Opened(null, "prime.mapart.not-saved");
         }
-        messages.send(player, "prime.mapart.asked", "id", request.id(), "size", sizeOf(request));
         for (Player staff : server.getOnlinePlayers()) {
             if (staff.hasPermission(PermissionNodes.MAPART_REVIEW)) {
                 announce(staff, request);
             }
         }
         Scheduling.async(plugin, () -> postWaiting(request));
+        return new Opened(request, "");
+    }
+
+    public void ask(Player player, String link, String sizeTyped) {
+        Opened opened = open(player.getUniqueId(), player.getName(), link, sizeTyped,
+                player.hasPermission(PermissionNodes.MAPART));
+        if (opened.request() == null) {
+            messages.send(player, opened.refusal(), opened.args());
+            return;
+        }
+        messages.send(player, "prime.mapart.asked", "id", opened.request().id(), "size", sizeOf(opened.request()));
+    }
+
+    /**
+     * A request sent from outside the game (an image uploaded on Discord) for the sender's linked account. Prime is
+     * read from Core's records, since the player may be offline. Any thread.
+     */
+    public StaffReviews.Answer submit(StaffReviews.Submission submission, boolean prime) {
+        Opened opened = open(submission.player(), submission.name(), submission.link(), submission.options(), prime);
+        if (opened.request() == null) {
+            String refusal = opened.refusal().substring(opened.refusal().lastIndexOf('.') + 1);
+            return new StaffReviews.Answer(refusal.replace('-', '_'), "", MapArtReviews.refusalText(refusal, opened.args()));
+        }
+        Player online = server.getPlayer(submission.player());
+        if (online != null) {
+            messages.send(online, "prime.mapart.asked", "id", opened.request().id(), "size", sizeOf(opened.request()));
+        }
+        return new StaffReviews.Answer("asked", opened.request().id(), String.format(Locale.ROOT,
+                "Asked! Map art %s (%s maps) waits for the team. Once it is approved, the maps come to you in game.",
+                opened.request().id(), sizeOf(opened.request())));
     }
 
     /** Off the server's threads: the request with a small picture of it, for staff on Discord. */
@@ -127,6 +156,10 @@ public final class MapArtService {
         try {
             BufferedImage scaled = fetcher.scale(fetcher.fetch(request.url(),
                     settings.get().mapartMostMegabytes() * 1024L * 1024L), request.width(), request.height());
+            // links from Discord uploads run out after a day: the picture staff approve is the one kept here
+            Path folder = tiles.resolve(request.id());
+            Files.createDirectories(folder);
+            ImageIO.write(scaled, "png", folder.resolve(KEPT).toFile());
             preview = PreviewMaker.jpeg(scaled, PREVIEW_BYTES);
         } catch (IOException | RuntimeException failed) {
             problem = String.valueOf(failed.getMessage());
@@ -221,9 +254,10 @@ public final class MapArtService {
         Scheduling.async(plugin, () -> {
             List<BufferedImage> parts = new ArrayList<>();
             try {
-                BufferedImage scaled = fetcher.scale(fetcher.fetch(request.url(), mostBytes), request.width(),
-                        request.height());
                 Path folder = tiles.resolve(request.id());
+                Path kept = folder.resolve(KEPT);
+                BufferedImage scaled = Files.exists(kept) ? ImageIO.read(kept.toFile())
+                        : fetcher.scale(fetcher.fetch(request.url(), mostBytes), request.width(), request.height());
                 Files.createDirectories(folder);
                 for (int index = 0; index < request.tiles(); index++) {
                     BufferedImage part = fetcher.tile(scaled, index, request.width());

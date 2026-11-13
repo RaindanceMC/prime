@@ -51,4 +51,15 @@ class MapArtReviewsTest {
         assertThat(done.detail()).isEqualTo("6 maps drawn. Ada gets them now, or when they next join.");
         assertThat(MapArtReviews.failed(request, "Mo", "404").reason()).isEqualTo("404");
     }
+
+    @Test
+    @DisplayName("a request from Discord that is not taken says why in one sentence, with its number")
+    void refusals() {
+        assertThat(MapArtReviews.refusalText("too-big", "most", 16)).isEqualTo("One image covers at most 16 maps.");
+        assertThat(MapArtReviews.refusalText("month-used", "allowed", 1)).contains("(1 a month)");
+        assertThat(MapArtReviews.refusalText("bad-link", "reason", "only https:// links"))
+                .isEqualTo("That image cannot be used: only https:// links.");
+        assertThat(MapArtReviews.refusalText("not-prime")).contains("Prime perk");
+        assertThat(MapArtReviews.refusalText("anything else")).contains("Try again");
+    }
 }

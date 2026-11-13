@@ -47,4 +47,18 @@ public final class MapArtReviews {
         return String.format(Locale.ROOT, "Map art %d×%d (%d map%s)", request.width(), request.height(),
                 request.tiles(), request.tiles() == 1 ? "" : "s");
     }
+
+    /** Why a request from outside the game was not taken, in one plain sentence for the sender. */
+    public static String refusalText(String refusal, Object... args) {
+        Object first = args.length > 1 ? args[1] : "";
+        return switch (refusal) {
+            case "switched-off" -> "Map art requests are switched off right now.";
+            case "not-prime" -> "Map art is a Prime perk, and your Minecraft account has no Prime right now.";
+            case "usage" -> "Pick a size like 2x2 (maps wide × maps high).";
+            case "too-big" -> "One image covers at most " + first + " maps.";
+            case "bad-link" -> "That image cannot be used: " + first + ".";
+            case "month-used" -> "You have used this month's map art (" + first + " a month). Next month brings another.";
+            default -> "The request could not be saved right now. Try again in a moment.";
+        };
+    }
 }

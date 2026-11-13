@@ -22,7 +22,7 @@ import java.util.List;
  */
 public final class PrimeModule implements FlexModule {
 
-    private static final ModuleInfo INFO = ModuleInfo.of("prime", "Prime", "0.2.0")
+    private static final ModuleInfo INFO = ModuleInfo.of("prime", "Prime", "0.3.0")
             .describedAs("The Prime subscription: its overview, the store's commands, and map art for members")
             .by("Raindancer118");
 
@@ -46,6 +46,8 @@ public final class PrimeModule implements FlexModule {
                 context.core().messages(), settings::current, context.dataFolder().resolve("mapart"),
                 context.core().staffReviews());
         context.closeWith(context.core().staffReviews().decider(MapArtReviews.KIND, mapArt::decide));
+        context.closeWith(context.core().staffReviews().intake(MapArtReviews.KIND, submission -> mapArt.submit(
+                submission, context.core().prime().isPrime(submission.player(), java.time.Instant.now()))));
         // Maps lose their custom drawing on a restart; the tiles are kept, so draw them again once the worlds are up.
         Scheduling.globalLater(context.plugin(), 1, () -> {
             int restored = mapArt.restore();
