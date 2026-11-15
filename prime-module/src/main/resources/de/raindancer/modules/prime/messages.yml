@@ -18,7 +18,7 @@ prime:
     store-hover: "<gray>Open the store"
     not-prime: "<gray>You do not have Prime yet. Ask the team how to get it."
   mapart:
-    usage: "<gray>/prime mapart <https-link> <width>x<height> <dark_gray>(maps wide × maps high), for example <gray>/prime mapart https://example.com/cat.png 2x2"
+    usage: "<gray>/prime mapart <https-link> small|medium|large <dark_gray>(the size is picked from the picture) or <gray><width>x<height> <dark_gray>(maps wide × maps high), for example <gray>/prime mapart https://example.com/cat.png large"
     usage-staff: "<gray>/prime mapart list · approve <id> · refuse <id> [reason]"
     switched-off: "<red>Map art requests are switched off on this server."
     not-prime: "<red>Map art is a Prime perk. <gray>/prime shows what Prime gives."
@@ -33,6 +33,8 @@ prime:
     unknown: "<red>There is no map art <white><id></white>."
     not-waiting: "<red>Map art <white><id></white> was decided already."
     fetching: "<gray>Fetching and drawing map art <white><id></white>…"
+    measuring: "<gray>Looking at your picture to pick its size…"
+    unreadable: "<red>That picture could not be read: <white><reason></white>. <gray>Use the image's own https:// address."
     failed: "<red>Map art <white><id></white> could not be drawn: <white><reason></white>. <gray>It still waits. Refuse it, or ask the player for another link."
     approved-staff: "<green>Map art <white><id></white> is drawn. <gray><player> gets the maps now, or when they next join."
     approved-elsewhere: "<green>Map art <white><id></white> by <white><player></white> is approved by <white><by></white>; it is being drawn."

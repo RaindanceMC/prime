@@ -32,7 +32,7 @@ public record PrimeSettings(
         int mapartPerMonth,
 
         @In("prime/mapart") @Title("Most maps per image") @Range(min = 1, max = 64)
-        @Describe("How many maps one image may cover, width times height. 32 allows 8×4, 7×4 or 6×5.")
+        @Describe("How many maps one image may cover, width times height. 64 allows 720p (10×6), a poster (6×9) or 8×8. Large is this many at most.")
         @Key("mapart.most-maps")
         int mapartMostMaps,
 
@@ -41,7 +41,7 @@ public record PrimeSettings(
         @Key("mapart.most-megabytes")
         int mapartMostMegabytes) {
 
-    public static final PrimeSettings DEFAULTS = new PrimeSettings("", true, 1, 32, 8);
+    public static final PrimeSettings DEFAULTS = new PrimeSettings("", true, 1, 64, 8);
 
     public PrimeSettings {
         storeUrl = storeUrl == null ? "" : storeUrl.strip();

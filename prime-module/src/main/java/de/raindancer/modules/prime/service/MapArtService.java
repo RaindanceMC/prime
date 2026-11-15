@@ -84,7 +84,17 @@ public final class MapArtService {
     private record Opened(MapArtRequest request, String refusal, Object... args) {
     }
 
-    private Opened open(java.util.UUID player, String name, String link, String sizeTyped, boolean prime) {
+    private Opened open(java.util.UUID player, String name, String link, String sizeTyped, boolean prime,
+                        BufferedImage fetched) {
+        return open(player, name, link, sizeTyped, prime, fetched, false);
+    }
+
+    /**
+     * @param fetched   the picture when it was already fetched to pick a size, else null
+     * @param checkOnly only the refusals; an empty refusal and no request means it may go ahead
+     */
+    private Opened open(java.util.UUID player, String name, String link, String sizeTyped, boolean prime,
+                        BufferedImage fetched, boolean checkOnly) {
         PrimeSettings now = settings.get();
         if (!now.mapartEnabled()) {
             return new Opened(null, "prime.mapart.switched-off");
@@ -109,6 +119,9 @@ public final class MapArtService {
         if (!book.readable()) {
             return new Opened(null, "prime.mapart.not-saved");
         }
+        if (checkOnly) {
+            return new Opened(null, "");
+        }
         MapArtRequest request = new MapArtRequest(newId(), player, name, link.strip(), size.get().width(),
                 size.get().height(), MapArtRequest.Status.WAITING, Instant.now(), "", "", "", List.of());
         if (!book.put(request)) {
@@ -119,13 +132,56 @@ public final class MapArtService {
                 announce(staff, request);
             }
         }
-        Scheduling.async(plugin, () -> postWaiting(request));
+        Scheduling.async(plugin, () -> postWaiting(request, fetched));
         return new Opened(request, "");
     }
 
     public void ask(Player player, String link, String sizeTyped) {
-        Opened opened = open(player.getUniqueId(), player.getName(), link, sizeTyped,
-                player.hasPermission(PermissionNodes.MAPART));
+        Optional<MapArtRule.Preset> preset = rule.preset(sizeTyped);
+        if (preset.isEmpty()) {
+            asked(player, open(player.getUniqueId(), player.getName(), link, sizeTyped,
+                    player.hasPermission(PermissionNodes.MAPART), null));
+            return;
+        }
+        // Refusals that need no picture come before fetching one.
+        Opened early = open(player.getUniqueId(), player.getName(), link, "1x1", player.hasPermission(PermissionNodes.MAPART), null, true);
+        if (early.request() == null && !early.refusal().isEmpty()) {
+            messages.send(player, early.refusal(), early.args());
+            return;
+        }
+        messages.send(player, "prime.mapart.measuring");
+        Scheduling.async(plugin, () -> {
+            Measured measured = measure(link, preset.get());
+            Scheduling.entity(plugin, player, () -> {
+                if (measured.problem() != null) {
+                    messages.send(player, "prime.mapart.unreadable", "reason", measured.problem());
+                    return;
+                }
+                asked(player, open(player.getUniqueId(), player.getName(), link, measured.size(),
+                        player.hasPermission(PermissionNodes.MAPART), measured.picture()));
+            });
+        });
+    }
+
+    /** A picture fetched to pick its size: the size as {@code WxH}, or why it could not be read. */
+    private record Measured(String size, BufferedImage picture, String problem) {
+    }
+
+    /** Blocking: off the server's threads. */
+    private Measured measure(String link, MapArtRule.Preset preset) {
+        try {
+            BufferedImage picture = fetcher.fetch(link.strip(), settings.get().mapartMostMegabytes() * 1024L * 1024L);
+            MapArtRule.Size size = rule.fit(picture.getWidth(), picture.getHeight(), preset, settings.get().mapartMostMaps());
+            return new Measured(size.width() + "x" + size.height(), picture, null);
+        } catch (IOException | RuntimeException failed) {
+            return new Measured(null, null, String.valueOf(failed.getMessage()));
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+            return new Measured(null, null, "interrupted");
+        }
+    }
+
+    private void asked(Player player, Opened opened) {
         if (opened.request() == null) {
             messages.send(player, opened.refusal(), opened.args());
             return;
@@ -138,7 +194,24 @@ public final class MapArtService {
      * read from Core's records, since the player may be offline. Any thread.
      */
     public StaffReviews.Answer submit(StaffReviews.Submission submission, boolean prime) {
-        Opened opened = open(submission.player(), submission.name(), submission.link(), submission.options(), prime);
+        Optional<MapArtRule.Preset> preset = rule.preset(submission.options());
+        Opened opened;
+        if (preset.isEmpty()) {
+            opened = open(submission.player(), submission.name(), submission.link(), submission.options(), prime, null);
+        } else {
+            Opened early = open(submission.player(), submission.name(), submission.link(), "1x1", prime, null, true);
+            Measured measured = early.request() == null && !early.refusal().isEmpty() ? null
+                    : server.isPrimaryThread() ? new Measured(null, null, "it could not be fetched from here")
+                    : measure(submission.link(), preset.get());
+            if (measured == null) {
+                opened = early;
+            } else if (measured.problem() != null) {
+                opened = new Opened(null, "prime.mapart.unreadable", "reason", measured.problem());
+            } else {
+                opened = open(submission.player(), submission.name(), submission.link(), measured.size(), prime,
+                        measured.picture());
+            }
+        }
         if (opened.request() == null) {
             String refusal = opened.refusal().substring(opened.refusal().lastIndexOf('.') + 1);
             return new StaffReviews.Answer(refusal.replace('-', '_'), "", MapArtReviews.refusalText(refusal, opened.args()));
@@ -153,12 +226,13 @@ public final class MapArtService {
     }
 
     /** Off the server's threads: the request with a small picture of it, for staff on Discord. */
-    private void postWaiting(MapArtRequest request) {
+    private void postWaiting(MapArtRequest request, BufferedImage fetched) {
         byte[] preview = new byte[0];
         String problem = "";
         try {
-            BufferedImage scaled = fetcher.scale(fetcher.fetch(request.url(),
-                    settings.get().mapartMostMegabytes() * 1024L * 1024L), request.width(), request.height());
+            BufferedImage source = fetched != null ? fetched
+                    : fetcher.fetch(request.url(), settings.get().mapartMostMegabytes() * 1024L * 1024L);
+            BufferedImage scaled = fetcher.scale(source, request.width(), request.height());
             // links from Discord uploads run out after a day: the picture staff approve is the one kept here
             Path folder = tiles.resolve(request.id());
             Files.createDirectories(folder);

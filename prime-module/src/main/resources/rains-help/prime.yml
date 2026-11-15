@@ -23,7 +23,7 @@ sections:
     title: Map art
     when: prime:mapart.enabled
     text: |
-      <white>/prime mapart <link> <width>x<height></white>: the image's own https:// address, and how many maps wide and high it should be, at most {setting:prime:mapart.most-maps} maps. The team looks at every image first; once it is approved you get all its maps in one bundle, ready for item frames. {setting:prime:mapart.per-month} per month; a refused one does not count. Only send images you may use.
+      <white>/prime mapart <link> <size></white>: the image's own https:// address, then <white>small</white>, <white>medium</white> or <white>large</white> and the server picks the maps from the picture's shape, or a size like <white>6x4</white> (maps wide × high), at most {setting:prime:mapart.most-maps} maps. 720p fits 10x6, a cinema poster 6x9. The team looks at every image first; once it is approved you get all its maps in one bundle, ready for item frames. {setting:prime:mapart.per-month} per month; a refused one does not count. Only send images you may use.
   - question: How does the team handle map art?
     title: Map art for staff
     when: prime:mapart.enabled

@@ -44,6 +44,62 @@ public final class MapArtRule {
         return size.width() * size.height() <= mostMaps;
     }
 
+    /** Sizes a player can ask for by name; the server picks the maps from the picture's shape. */
+    public enum Preset {
+        SMALL(8), MEDIUM(24), LARGE(Integer.MAX_VALUE);
+
+        /** The most maps this preset covers, before the server's own limit. */
+        final int maps;
+
+        Preset(int maps) {
+            this.maps = maps;
+        }
+    }
+
+    /** How far a size's shape may be off the picture's, as a log of the ratios; beyond it a fifth gets cut off. */
+    private static final double FAR_OFF = 0.25;
+
+    public Optional<Preset> preset(String typed) {
+        if (typed == null) {
+            return Optional.empty();
+        }
+        return switch (typed.strip().toLowerCase(Locale.ROOT)) {
+            case "small" -> Optional.of(Preset.SMALL);
+            case "medium" -> Optional.of(Preset.MEDIUM);
+            case "large" -> Optional.of(Preset.LARGE);
+            default -> Optional.empty();
+        };
+    }
+
+    /**
+     * The size for a picture of {@code pixelsWide × pixelsHigh}: as many maps as the preset and the server's limit
+     * allow, less for every bit the shape is off the picture's, since that part is cut away. A shape nothing comes
+     * close to (a banner fifty times wider than high) gets the closest one there is.
+     */
+    public Size fit(int pixelsWide, int pixelsHigh, Preset preset, int mostMaps) {
+        int budget = Math.max(1, Math.min(preset.maps, mostMaps));
+        double ratio = Math.max(1, pixelsWide) / (double) Math.max(1, pixelsHigh);
+        Size best = null;
+        double bestScore = -1;
+        Size closest = new Size(1, 1);
+        double closestOff = Double.MAX_VALUE;
+        for (int height = 1; height <= budget; height++) {
+            for (int width = 1; width * height <= budget; width++) {
+                double off = Math.abs(Math.log(width / (double) height / ratio));
+                double score = width * height * (1 - 2 * off);
+                if (off <= FAR_OFF && score > bestScore) {
+                    best = new Size(width, height);
+                    bestScore = score;
+                }
+                if (off < closestOff) {
+                    closest = new Size(width, height);
+                    closestOff = off;
+                }
+            }
+        }
+        return best != null ? best : closest;
+    }
+
     /** Requests this month that count — refused ones do not. */
     public int usedThisMonth(Collection<MapArtRequest> all, UUID player, Instant now) {
         YearMonth month = YearMonth.from(now.atZone(ZoneOffset.UTC));

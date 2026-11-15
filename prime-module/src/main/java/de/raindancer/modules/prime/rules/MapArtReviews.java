@@ -54,7 +54,8 @@ public final class MapArtReviews {
         return switch (refusal) {
             case "switched-off" -> "Map art requests are switched off right now.";
             case "not-prime" -> "Map art is a Prime perk, and your Minecraft account has no Prime right now.";
-            case "usage" -> "Pick a size like 2x2 (maps wide × maps high).";
+            case "usage" -> "Pick small, medium or large, or a size like 6x4 (maps wide × maps high).";
+            case "unreadable" -> "That image could not be read: " + first + ".";
             case "too-big" -> "One image covers at most " + first + " maps.";
             case "bad-link" -> "That image cannot be used: " + first + ".";
             case "month-used" -> "You have used this month's map art (" + first + " a month). Next month brings another.";

@@ -34,13 +34,49 @@ class MapArtRuleTest {
     }
 
     @Test
-    @DisplayName("by default a widescreen picture fits: 6x4, 7x4 and 8x4, but not 6x6")
+    @DisplayName("by default 720p (10x6) and a cinema poster (6x9) fit, more than 64 maps does not")
     void widescreenByDefault() {
         int most = de.raindancer.modules.prime.PrimeSettings.DEFAULTS.mapartMostMaps();
-        assertThat(rule.fits(new MapArtRule.Size(6, 4), most)).isTrue();
-        assertThat(rule.fits(new MapArtRule.Size(7, 4), most)).isTrue();
-        assertThat(rule.fits(new MapArtRule.Size(8, 4), most)).isTrue();
-        assertThat(rule.fits(new MapArtRule.Size(6, 6), most)).isFalse();
+        assertThat(rule.fits(new MapArtRule.Size(10, 6), most)).isTrue();
+        assertThat(rule.fits(new MapArtRule.Size(6, 9), most)).isTrue();
+        assertThat(rule.fits(new MapArtRule.Size(8, 8), most)).isTrue();
+        assertThat(rule.fits(new MapArtRule.Size(9, 8), most)).isFalse();
+    }
+
+    @Test
+    @DisplayName("small, medium and large are presets, in any case; anything else is not")
+    void presets() {
+        assertThat(rule.preset("small")).contains(MapArtRule.Preset.SMALL);
+        assertThat(rule.preset(" Medium ")).contains(MapArtRule.Preset.MEDIUM);
+        assertThat(rule.preset("LARGE")).contains(MapArtRule.Preset.LARGE);
+        assertThat(rule.preset("3x2")).isEmpty();
+        assertThat(rule.preset(null)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("a preset picks the biggest size that keeps the picture's shape: 720p, a poster, a photo, a square")
+    void picksTheSize() {
+        assertThat(rule.fit(1280, 720, MapArtRule.Preset.LARGE, 64)).isEqualTo(new MapArtRule.Size(10, 6));
+        assertThat(rule.fit(2000, 3000, MapArtRule.Preset.LARGE, 64)).isEqualTo(new MapArtRule.Size(6, 9));
+        assertThat(rule.fit(4000, 3000, MapArtRule.Preset.LARGE, 64)).isEqualTo(new MapArtRule.Size(9, 7));
+        assertThat(rule.fit(500, 500, MapArtRule.Preset.LARGE, 64)).isEqualTo(new MapArtRule.Size(8, 8));
+
+        assertThat(rule.fit(1280, 720, MapArtRule.Preset.MEDIUM, 64)).isEqualTo(new MapArtRule.Size(6, 4));
+        assertThat(rule.fit(2000, 3000, MapArtRule.Preset.MEDIUM, 64)).isEqualTo(new MapArtRule.Size(4, 6));
+        assertThat(rule.fit(500, 500, MapArtRule.Preset.MEDIUM, 64)).isEqualTo(new MapArtRule.Size(4, 4));
+
+        assertThat(rule.fit(1280, 720, MapArtRule.Preset.SMALL, 64)).isEqualTo(new MapArtRule.Size(4, 2));
+        assertThat(rule.fit(2000, 3000, MapArtRule.Preset.SMALL, 64)).isEqualTo(new MapArtRule.Size(2, 3));
+        assertThat(rule.fit(500, 500, MapArtRule.Preset.SMALL, 64)).isEqualTo(new MapArtRule.Size(2, 2));
+    }
+
+    @Test
+    @DisplayName("the server's limit caps every preset, and an odd shape still gets the closest size there is")
+    void cappedAndOdd() {
+        assertThat(rule.fit(1280, 720, MapArtRule.Preset.LARGE, 16)).isEqualTo(new MapArtRule.Size(5, 3));
+        assertThat(rule.fit(5000, 100, MapArtRule.Preset.LARGE, 64)).isEqualTo(new MapArtRule.Size(50, 1));
+        assertThat(rule.fit(5000, 100, MapArtRule.Preset.SMALL, 64)).isEqualTo(new MapArtRule.Size(8, 1));
+        assertThat(rule.fits(rule.fit(1, 1, MapArtRule.Preset.LARGE, 1), 1)).isTrue();
     }
 
     @Test

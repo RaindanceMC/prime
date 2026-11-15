@@ -136,7 +136,7 @@ public final class PrimeCommand implements BasicCommand {
                 options.addAll(List.of("list", "approve", "refuse"));
             }
         } else if (args[0].equalsIgnoreCase("mapart") && args.length == 3 && args[1].startsWith("http")) {
-            options = List.of("1x1", "2x2", "3x2", "4x4", "6x4", "7x4", "8x4");
+            options = List.of("small", "medium", "large", "2x2", "4x4", "6x4", "10x6", "4x6", "6x9");
         } else if (CORE_WORDS.contains(args[0].toLowerCase(Locale.ROOT))) {
             return core.suggest(source, args);
         } else {
