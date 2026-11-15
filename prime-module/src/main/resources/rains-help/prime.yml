@@ -1,6 +1,6 @@
 id: prime
 title: Prime
-summary: The supporter subscription — what it gives, and map art for members.
+summary: "The supporter subscription: what it gives, and map art for members."
 intro: |
   Prime is how you support the server every month. In return you get coloured names, the weapon and armour skins (all but a few creator-only ones), a Prime-only cosmetic drop each month, the [PRIME] badge in nine colours, your guild's colours from day one, a statue at spawn, map art of any image, and your ideas looked at first.
 icon: NETHER_STAR
@@ -23,7 +23,7 @@ sections:
     title: Map art
     when: prime:mapart.enabled
     text: |
-      <white>/prime mapart <link> <width>x<height></white> — the image's own https:// address, and how many maps wide and high it should be, at most {setting:prime:mapart.most-maps} maps. The team looks at every image first; once it is approved you get the maps, ready for item frames. {setting:prime:mapart.per-month} per month; a refused one does not count. Only send images you may use.
+      <white>/prime mapart <link> <width>x<height></white>: the image's own https:// address, and how many maps wide and high it should be, at most {setting:prime:mapart.most-maps} maps. The team looks at every image first; once it is approved you get the maps, ready for item frames. {setting:prime:mapart.per-month} per month; a refused one does not count. Only send images you may use.
   - question: How does the team handle map art?
     title: Map art for staff
     when: prime:mapart.enabled
