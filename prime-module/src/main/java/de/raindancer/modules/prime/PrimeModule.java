@@ -36,7 +36,6 @@ public final class PrimeModule implements FlexModule {
         SettingsStore<PrimeSettings> settings = context.settings(PrimeSettings.class, PrimeSettings.DEFAULTS);
         context.core().messages().defineFrom(PrimeModule.class.getResourceAsStream("messages.yml"),
                 context.chat().brand()::chatPrefix);
-        context.core().messages().seriousFrom(PrimeModule.class.getResourceAsStream("messages-serious.yml"));
         PermissionNodes.register(context.plugin().getServer());
 
         MapArtBook book = new MapArtBook(YamlStore.network(context.dataFolder().resolve("mapart.yml")));
