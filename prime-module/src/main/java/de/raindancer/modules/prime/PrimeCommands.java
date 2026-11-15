@@ -19,10 +19,10 @@ public final class PrimeCommands {
     public static List<ModuleCommand> declared() {
         return List.of(ModuleCommand.of("prime", "Your Prime subscription, its perks, and map art",
                         new PrimeCommand(PrimeCommands::require))
-                .taking("(nothing) — your Prime and what it gives",
-                        "mapart <https-link> <width>x<height> — ask for an image as map art (Prime)",
-                        "mapart list | approve <id> | refuse <id> [reason] — staff",
-                        "grant <player|uuid> <days> | revoke <player|uuid> | info <player|uuid> — the store, the owner"));
+                .taking("(nothing): your Prime and what it gives",
+                        "mapart <https-link> <width>x<height>: ask for an image as map art (Prime)",
+                        "mapart list | approve <id> | refuse <id> [reason]: staff",
+                        "grant <player|uuid> <days> | revoke <player|uuid> | info <player|uuid>: the store, the owner"));
     }
 
     static void ready(PrimeServices live) {

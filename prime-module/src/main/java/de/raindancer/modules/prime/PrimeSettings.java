@@ -17,7 +17,7 @@ import org.bukkit.Material;
 public record PrimeSettings(
 
         @In("prime") @Title("Store link")
-        @Describe("Where /prime sends somebody who wants Prime — the Tebex store's address. Empty: no link is shown.")
+        @Describe("Where /prime sends somebody who wants Prime (the Tebex store's address). Empty: no link is shown.")
         @Key("store-url")
         String storeUrl,
 
@@ -32,7 +32,7 @@ public record PrimeSettings(
         int mapartPerMonth,
 
         @In("prime/mapart") @Title("Most maps per image") @Range(min = 1, max = 64)
-        @Describe("How many maps one image may cover, width times height — 16 is up to 4×4.")
+        @Describe("How many maps one image may cover, width times height. 16 is up to 4×4.")
         @Key("mapart.most-maps")
         int mapartMostMaps,
 
