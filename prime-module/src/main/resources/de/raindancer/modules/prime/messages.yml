@@ -43,3 +43,4 @@ prime:
     delivered-dropped: "<green>Your map art <white><id></white> is here: a bundle with <white><count></white> map(s), <white><size></white>. <yellow>Your inventory was full, so the bundle is on the ground at your feet."
     item: "<gradient:#ff3d9a:#ffd27a>Map art <id></gradient> <gray>column <column>, row <row>"
     bundle: "<gradient:#ff3d9a:#ffd27a>Map art <id></gradient> <gray><size> maps"
+    bundle-thanks: "<#ff4fa6>Thank you for supporting us with Prime!"

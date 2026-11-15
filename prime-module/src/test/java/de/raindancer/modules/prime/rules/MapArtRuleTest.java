@@ -34,6 +34,16 @@ class MapArtRuleTest {
     }
 
     @Test
+    @DisplayName("by default a widescreen picture fits: 6x4, 7x4 and 8x4, but not 6x6")
+    void widescreenByDefault() {
+        int most = de.raindancer.modules.prime.PrimeSettings.DEFAULTS.mapartMostMaps();
+        assertThat(rule.fits(new MapArtRule.Size(6, 4), most)).isTrue();
+        assertThat(rule.fits(new MapArtRule.Size(7, 4), most)).isTrue();
+        assertThat(rule.fits(new MapArtRule.Size(8, 4), most)).isTrue();
+        assertThat(rule.fits(new MapArtRule.Size(6, 6), most)).isFalse();
+    }
+
+    @Test
     @DisplayName("this month's requests count, refused ones and last month's do not")
     void quota() {
         Instant now = Instant.parse("2026-11-20T10:00:00Z");

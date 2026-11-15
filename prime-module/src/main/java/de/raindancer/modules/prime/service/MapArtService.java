@@ -11,6 +11,7 @@ import de.raindancer.modules.prime.rules.MapArtReviews;
 import de.raindancer.modules.prime.rules.MapArtRule;
 import de.raindancer.modules.prime.store.MapArtBook;
 import de.raindancer.modules.prime.util.PermissionNodes;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -351,10 +352,12 @@ public final class MapArtService {
     }
 
     private ItemStack bundle(MapArtRequest request, List<ItemStack> maps) {
-        ItemStack bundle = new ItemStack(Material.BUNDLE);
+        ItemStack bundle = new ItemStack(Material.PINK_BUNDLE);
         BundleMeta meta = (BundleMeta) bundle.getItemMeta();
         meta.setItems(maps);
         meta.itemName(messages.get("prime.mapart.bundle", "id", request.id(), "size", sizeOf(request)));
+        meta.lore(List.of(messages.get("prime.mapart.bundle-thanks")
+                .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE)));
         bundle.setItemMeta(meta);
         return bundle;
     }
