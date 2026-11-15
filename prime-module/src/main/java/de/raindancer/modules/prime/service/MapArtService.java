@@ -6,6 +6,7 @@ import de.raindancer.core.platform.util.Scheduling;
 import de.raindancer.core.ui.messages.Messages;
 import de.raindancer.modules.prime.PrimeSettings;
 import de.raindancer.modules.prime.model.MapArtRequest;
+import de.raindancer.modules.prime.rules.MapArtBundles;
 import de.raindancer.modules.prime.rules.MapArtReviews;
 import de.raindancer.modules.prime.rules.MapArtRule;
 import de.raindancer.modules.prime.store.MapArtBook;
@@ -16,6 +17,7 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BundleMeta;
 import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.MapView;
 import org.bukkit.plugin.Plugin;
@@ -316,25 +318,45 @@ public final class MapArtService {
             if (!book.change(request.id(), MapArtRequest::delivered)) {
                 continue;
             }
-            List<ItemStack> items = new ArrayList<>();
-            for (int index = 0; index < request.maps().size(); index++) {
-                MapView map = server.getMap(request.maps().get(index));
-                if (map == null) {
-                    continue;
+            List<ItemStack> bundles = new ArrayList<>();
+            int count = 0;
+            for (List<Integer> packed : MapArtBundles.pack(request.maps().size())) {
+                List<ItemStack> maps = new ArrayList<>();
+                for (int index : packed) {
+                    MapView map = server.getMap(request.maps().get(index));
+                    if (map != null) {
+                        maps.add(mapItem(request, index, map));
+                    }
                 }
-                ItemStack item = new ItemStack(Material.FILLED_MAP);
-                MapMeta meta = (MapMeta) item.getItemMeta();
-                meta.setMapView(map);
-                meta.itemName(messages.get("prime.mapart.item", "id", request.id(),
-                        "column", index % request.width() + 1, "row", index / request.width() + 1));
-                item.setItemMeta(meta);
-                items.add(item);
+                if (!maps.isEmpty()) {
+                    bundles.add(bundle(request, maps));
+                    count += maps.size();
+                }
             }
-            boolean dropped = !player.getInventory().addItem(items.toArray(ItemStack[]::new)).values().stream()
+            boolean dropped = !player.getInventory().addItem(bundles.toArray(ItemStack[]::new)).values().stream()
                     .peek(left -> player.getWorld().dropItemNaturally(player.getLocation(), left)).toList().isEmpty();
             messages.send(player, dropped ? "prime.mapart.delivered-dropped" : "prime.mapart.delivered",
-                    "id", request.id(), "count", items.size(), "size", sizeOf(request));
+                    "id", request.id(), "count", count, "size", sizeOf(request));
         }
+    }
+
+    private ItemStack mapItem(MapArtRequest request, int index, MapView map) {
+        ItemStack item = new ItemStack(Material.FILLED_MAP);
+        MapMeta meta = (MapMeta) item.getItemMeta();
+        meta.setMapView(map);
+        meta.itemName(messages.get("prime.mapart.item", "id", request.id(),
+                "column", index % request.width() + 1, "row", index / request.width() + 1));
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private ItemStack bundle(MapArtRequest request, List<ItemStack> maps) {
+        ItemStack bundle = new ItemStack(Material.BUNDLE);
+        BundleMeta meta = (BundleMeta) bundle.getItemMeta();
+        meta.setItems(maps);
+        meta.itemName(messages.get("prime.mapart.bundle", "id", request.id(), "size", sizeOf(request)));
+        bundle.setItemMeta(meta);
+        return bundle;
     }
 
     /** After a restart: every map drawn here gets its picture back. On the global thread. @return how many */
