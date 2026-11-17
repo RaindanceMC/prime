@@ -1,13 +1,13 @@
 id: prime
 title: Prime
-summary: "The supporter subscription: what it gives, and map art for members."
+summary: "The monthly membership: what it gives, and map art for members."
 intro: |
   Prime is how you support the server every month. In return you get coloured names, the weapon and armour skins (all but a few creator-only ones), a Prime-only cosmetic drop each month, the [PRIME] badge in nine colours, your guild's colours from day one, a statue at spawn, map art of any image, and your ideas looked at first.
 icon: NETHER_STAR
 category: Your profile
 order: 15
 module: prime
-aliases: [prime, supporter, subscription, mapart, map-art]
+aliases: [prime, membership, subscription, mapart, map-art]
 keywords: [prime, support, subscription, perks, badge, mapart, map art, image, statue, store, tebex]
 commands: [prime]
 sections:

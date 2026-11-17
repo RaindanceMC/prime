@@ -26,8 +26,8 @@ public final class PrimeStatues {
      * @param names   a player's name; somebody who paid before ever joining has none, and no statue yet
      */
     public static StatueBoard board(Supplier<List<UUID>> members, Function<UUID, Optional<String>> names) {
-        return StatueBoard.thanks("prime", "<gradient:#ff3d9a:#ffd27a><bold>Our Prime supporters</bold></gradient>",
-                "<gray>Thank you for supporting the server", MARK, "Prime supporters",
+        return StatueBoard.thanks("prime", "<gradient:#ff3d9a:#ffd27a><bold>Our Prime members</bold></gradient>",
+                "<gray>Thank you for being Prime", MARK, "Prime members",
                 () -> StatueBoards.named(members.get(), names));
     }
 }

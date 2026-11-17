@@ -1,7 +1,7 @@
 # This module's wording. Every line can be rewritten in plugins/RainsCore/messages.yml.
 prime:
   overview:
-    header: "<gradient:#ff3d9a:#ffd27a><bold>✦ Prime ✦</bold></gradient> <gray>The server's supporter subscription"
+    header: "<gradient:#ff3d9a:#ffd27a><bold>✦ Prime ✦</bold></gradient> <gray>The server's monthly membership"
     active: "<green>You have Prime</green> <gray>until <white><until></white> · since <white><since></white> · <white><months></white> month(s) of drops unlocked."
     perk-names: "<dark_gray> • <white>Coloured names</white><gray>: gradients, decorations, presets in /cosmetics"
     perk-skins: "<dark_gray> • <white>The weapon and armour skins</white><gray>: all but a few creator-only ones, plus particles and teleport looks"

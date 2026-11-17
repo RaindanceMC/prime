@@ -25,7 +25,7 @@ class PrimeStatuesTest {
                 id -> Optional.ofNullable(names.get(id)));
         assertThat(board.id()).isEqualTo("prime");
         assertThat(board.thankYou()).isTrue();
-        assertThat(board.ranks()).isEqualTo("Prime supporters");
+        assertThat(board.ranks()).isEqualTo("Prime members");
         assertThat(board.title(4, "Ada")).contains("PRIME").contains("Ada");
         assertThat(board.heading()).contains("Prime");
         assertThat(board.standings().get()).extracting(StatueBoard.Standing::name).containsExactly("Bo", "Ada");

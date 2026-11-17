@@ -24,7 +24,7 @@
         <plugin.name>RainsPrime</plugin.name>
         <!-- 0.1.0: /prime, the store's grant/revoke, map art. -->
         <!-- 0.7.0: offers the prime statue board to RainsCore 2.106.0 (/eco statue place prime), instead of Economy keeping it. -->
-        <plugin.version>0.7.0</plugin.version>
+        <plugin.version>0.7.1</plugin.version>
     </properties>
 
     <dependencies>
