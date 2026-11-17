@@ -18,11 +18,11 @@ import java.util.List;
 /**
  * Prime, the server's subscription, as players meet it: {@code /prime} with what it gives, and map art. Who is Prime
  * is Core's ({@code PrimeMembers}, granted by the store through {@code /prime grant}); the perks themselves live in
- * the modules they belong to — Cosmetics, Ranks, Guilds, Economy's statues, Essentials' feature requests.
+ * the modules they belong to — Cosmetics, Ranks, Guilds, Essentials' feature requests. Prime's statues are Core's; this module says who stands on them.
  */
 public final class PrimeModule implements FlexModule {
 
-    private static final ModuleInfo INFO = ModuleInfo.of("prime", "Prime", "0.6.0")
+    private static final ModuleInfo INFO = ModuleInfo.of("prime", "Prime", "0.7.0")
             .describedAs("The Prime subscription: its overview, the store's commands, and map art for members")
             .by("Raindancer118");
 
@@ -55,6 +55,15 @@ public final class PrimeModule implements FlexModule {
             }
         });
         context.listener(new JoinListener(context.plugin(), mapArt));
+        // Prime statues are Core's (2.106.0), placed with /eco statue place prime; here only who stands on them.
+        var server = context.plugin().getServer();
+        var statues = de.raindancer.modules.prime.service.PrimeStatues.board(
+                () -> context.core().prime() == null ? List.of()
+                        : context.core().prime().current(java.time.Instant.now()).stream()
+                                .map(de.raindancer.core.social.support.PrimeMembers.Member::player).toList(),
+                id -> de.raindancer.core.platform.command.PlayerTargets.nameOf(server, id));
+        de.raindancer.core.ui.statue.StatueBoards.offer(context.plugin(), statues);
+        context.closeWith(() -> de.raindancer.core.ui.statue.StatueBoards.withdraw(statues));
         PrimeCommands.ready(new PrimeServices(context.core().messages(), context.core(), mapArt, settings::current));
     }
 
