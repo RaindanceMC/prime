@@ -15,8 +15,8 @@ import java.util.function.Supplier;
  */
 public final class PrimeStatues {
 
-    /** Prime's badge colours, the default of Ranks' prime rank. */
-    private static final String MARK = "<gradient:#ff3d9a:#ff9ad5><bold>PRIME</bold></gradient>";
+    /** Ranks' prime tag as shipped: Core draws a tag as its badge only when it is exactly the one Ranks made one of. */
+    private static final String MARK = "<gradient:#ff3d9a:#ff9ad5><bold>[PRIME]</bold></gradient>";
 
     private PrimeStatues() {
     }
@@ -27,7 +27,7 @@ public final class PrimeStatues {
      */
     public static StatueBoard board(Supplier<List<UUID>> members, Function<UUID, Optional<String>> names) {
         return StatueBoard.thanks("prime", "<gradient:#ff3d9a:#ffd27a><bold>Our Prime members</bold></gradient>",
-                "<gray>Thank you for being Prime", MARK, "Prime members",
+                "", MARK, "Prime members",
                 () -> StatueBoards.named(members.get(), names));
     }
 }

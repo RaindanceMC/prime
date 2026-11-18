@@ -29,5 +29,8 @@ class PrimeStatuesTest {
         assertThat(board.title(4, "Ada")).contains("PRIME").contains("Ada");
         assertThat(board.heading()).contains("Prime");
         assertThat(board.standings().get()).extracting(StatueBoard.Standing::name).containsExactly("Bo", "Ada");
+        assertThat(board.caption()).as("no line under the name").isEmpty();
+        assertThat(board.mark()).as("exactly Ranks' prime tag, so Core draws its badge")
+                .isEqualTo("<gradient:#ff3d9a:#ff9ad5><bold>[PRIME]</bold></gradient>");
     }
 }
